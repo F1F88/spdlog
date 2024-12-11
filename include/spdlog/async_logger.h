@@ -15,6 +15,7 @@
 // destructing..
 
 #include <spdlog/logger.h>
+#include <spdlog/details/backend_worker.h>
 
 namespace spdlog {
 
@@ -30,10 +31,8 @@ namespace details {
 class thread_pool;
 }
 
-class SPDLOG_API async_logger final : public std::enable_shared_from_this<async_logger>,
-                                      public logger {
-    friend class details::thread_pool;
-
+class SPDLOG_API async_logger final : public logger,
+                                      public details::backend_worker {
 public:
     template <typename It>
     async_logger(std::string logger_name,
@@ -60,8 +59,8 @@ public:
 protected:
     void sink_it_(const details::log_msg &msg) override;
     void flush_() override;
-    void backend_sink_it_(const details::log_msg &incoming_log_msg);
-    void backend_flush_();
+    void backend_sink_it_(const details::log_msg &incoming_log_msg) override;
+    void backend_flush_() override;
 
 private:
     std::weak_ptr<details::thread_pool> thread_pool_;
